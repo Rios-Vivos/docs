@@ -1,0 +1,135 @@
+---
+title: Rios Vivos - Project Interaction & Security Risks
+---
+@startuml
+left to right direction
+skinparam componentStyle rectangle
+skinparam shadowing false
+skinparam backgroundColor #ffffff
+skinparam defaultTextAlignment left
+skinparam defaultFontColor #000000
+skinparam noteFontColor #ffffff
+skinparam componentFontColor #000000
+skinparam legendFontColor #ffffff
+skinparam note {
+  BackgroundColor #1f2937
+  BorderColor #e5e7eb
+}
+
+legend right
+|Severity|Meaning|
+|<#7f1d1d>High|Prioritize mitigation; unacceptable exposure|
+|<#92400e>Medium|Mitigate soon and monitor|
+|<#1e3a8a>Low|Address as capacity allows|
+endlegend
+
+actor "Public User" as Public
+actor "Admin/Editor" as Admin
+actor "Monitoring Device" as Sensor
+
+rectangle "rios-vivos-web\n(Next.js - public site)" as Web {
+  component "Public UI\n(browser SPA/SSR)" as WebUI
+}
+
+rectangle "rios-vivos-admin\n(Next.js dashboard)" as AdminApp {
+  component "Admin UI\n(content + user management)" as AdmUI
+  component "Grafana Embed" as AdmGraf
+}
+
+rectangle "Edge Layer\n(Cloudflare/Nginx TLS + WAF/rate limit)" as Edge
+
+rectangle "rios-vivos-api\n(Sails.js on Docker/EC2)" as API {
+  component "API Gateway & Routing\n(REST/CORS)" as APIGW
+  component "Auth Service\n(login, JWT/session, reset)" as Auth
+  component "CRUD: Home/Activities/Resources/Communities" as CRUDContent
+  component "CRUD: Users & Roles" as CRUDUsers
+  component "Monitoring Service\n(MQTT ingest, dashboards API)" as Mon
+  component "File Upload Handler\n(media -> S3)" as Upload
+  component "Logging / Site Config Service" as LogSvc
+}
+
+queue "Mosquitto (MQTT)" as MQTT
+rectangle "Grafana\n(dashboards)" as Graf
+cloud "S3 - Media & Uploads" as S3
+folder "Logs / Site Configs" as LOGF
+database "PostgreSQL (RDS)\nusers, reset_password, community,\ndonator, meditions, site_configs,\nlogs, monitoring_stations, etc." as DB
+rectangle "CI/CD & Terraform state\n(GitHub Actions, tfstate)" as CI
+
+Public --> WebUI
+Admin --> AdmUI
+Sensor --> MQTT
+
+WebUI --> Edge : HTTPS
+AdmUI --> Edge : HTTPS
+Edge --> APIGW : HTTPS
+AdmGraf --> Graf : HTTPS iframe
+
+APIGW --> Auth
+APIGW --> CRUDContent
+APIGW --> CRUDUsers
+APIGW --> Mon
+APIGW --> Upload
+APIGW --> LogSvc
+
+Auth --> DB
+CRUDContent --> DB
+CRUDUsers --> DB
+Mon --> DB
+LogSvc --> DB
+Upload --> S3
+Mon --> MQTT : subscribe/publish
+Graf --> DB : read metrics
+MQTT --> Mon
+LOGF --> DB
+CI --> API : deploys/builds
+
+note right of Web #7f1d1d
+- High: XSS/CSRF and token leakage via browser; enforce CSP, CSRF tokens, secure cookies, and avoid exposing API keys in public env vars.
+- Medium: Mixed-content and clickjacking risks; use HSTS and frame-ancestors.
+- Medium: Dependency supply-chain drift; pin/scan Next.js deps.
+end note
+
+note right of AdminApp #92400e
+- High: Privileged actions need strong auth; add MFA, session hardening, and short-lived tokens.
+- High: RBAC gaps enable IDOR on admin APIs; verify ownership/role on every call.
+- Medium: Grafana iframe could bypass SSO/CSP; restrict origins and enforce viewer-only service accounts.
+end note
+
+note right of Edge #92400e
+- High: CORS or proxy misconfig can bypass auth; allowlist origins/headers and validate host headers.
+- Medium: Missing rate limits/WAF enables brute force and scraping; tune per-route quotas.
+end note
+
+note right of APIGW #92400e
+- High: Mass-assignment/IDOR across CRUD services; whitelist fields and enforce tenant scoping.
+- Medium: Input validation gaps lead to injection and stored XSS in content; normalize and encode output.
+- Medium: Broken session invalidation; rotate tokens on privilege change and logout.
+end note
+
+note right of Auth #7f1d1d
+- High: Password/reset tokens reused or long-lived; issue one-time short-TTL tokens and audit use.
+- High: Credential storage must be salted hashes; forbid default admin and alert on brute force.
+- Medium: Refresh/session fixation; bind tokens to device/IP and use SameSite/Lax cookies when applicable.
+end note
+
+note right of Mon #92400e
+- High: MQTT poisoning or spoofed stations; require TLS, client certs, and topic ACLs.
+- Medium: Ingestion DoS via floods; rate-limit and queue sensor payloads.
+end note
+
+note right of Upload #92400e
+- High: Unscanned uploads enable malware or path traversal; virus-scan, limit mime/types, and strip metadata.
+- Medium: Public ACLs or long-lived pre-signed URLs leak media; default private and keep short TTLs.
+end note
+
+note right of DB #92400e
+- High: SQL injection from CRUD paths; use parameterized queries/ORM validators.
+- Medium: PII not partitioned; apply RBAC/row-level security and audit trails.
+- Medium: Backups/replicas unencrypted; enforce at-rest encryption and key rotation.
+end note
+
+note right of CI #1e3a8a
+- Medium: Leaked secrets in CI logs or Terraform state; encrypt tfstate, rotate CI tokens, and avoid writing secrets to stdout.
+end note
+
+@enduml

@@ -1,0 +1,320 @@
+@startuml
+
+!theme plain
+top to bottom direction
+skinparam linetype ortho
+
+class activity_focus_cards {
+   createdAt: bigint
+   updatedAt: bigint
+   slug: text
+   title_en: text
+   title_es: text
+   description_en: text
+   description_es: text
+   image_url: text
+   image_style: text
+   order_index: real
+   is_published: boolean
+   id: integer
+}
+class archive {
+   createdAt: bigint
+   fromModel: text
+   originalRecord: json
+   originalRecordId: json
+   id: integer
+}
+class banner_images {
+   createdAt: bigint
+   updatedAt: bigint
+   slug: text
+   title_en: text
+   title_es: text
+   image_url: text
+   images: json
+   target_url: text
+   section: varchar(64)
+   order_index: real
+   is_active: boolean
+   id: integer
+}
+class collaboration {
+   createdAt: bigint
+   updatedAt: bigint
+   type: text
+   subtype: text
+   full_name: text
+   email: text
+   phone: text
+   location: text
+   in_kind_category: text
+   in_kind_category_other: text
+   in_kind_description: text
+   delivery_option: text
+   payment_preference: text
+   monthly_amount: text
+   single_amount_range: text
+   single_amount_other: text
+   needs_receipt: boolean
+   receipt_name: text
+   receipt_rfc: text
+   receipt_address: text
+   additional_notes: text
+   age: real
+   address: text
+   volunteer_interest: text
+   additional_comments: text
+   alliance_type: text
+   organization_name: text
+   legal_status: text
+   organization_location: text
+   website_or_social: text
+   contact_role: text
+   organization_description: text
+   initial_proposal: text
+   needs_from_us: text
+   their_contribution: text
+   secondary_contact_name: text
+   secondary_contact_email: text
+   secondary_contact_phone: text
+   id: integer
+}
+class communities {
+   createdAt: bigint
+   updatedAt: bigint
+   code_name: text
+   slug: text
+   name: text
+   name_en: text
+   name_es: text
+   description_en: text
+   description_es: text
+   location_text: text
+   location_en: text
+   location_es: text
+   latitude: real
+   longitude: real
+   location: json
+   map_image_url: text
+   order_index: real
+   is_published: boolean
+   show_on_map: boolean
+   id: integer
+}
+class community_images {
+   createdAt: bigint
+   updatedAt: bigint
+   image_url: text
+   caption_en: text
+   caption_es: text
+   order_index: real
+   is_active: boolean
+   community_id: integer
+   id: integer
+}
+class event_entries {
+   createdAt: bigint
+   updatedAt: bigint
+   slug: text
+   title_en: text
+   title_es: text
+   description_en: text
+   description_es: text
+   location_en: text
+   location_es: text
+   start_time: real
+   end_time: real
+   status: varchar(24)
+   is_featured: boolean
+   is_published: boolean
+   id: integer
+}
+class grafana_panels {
+   createdAt: bigint
+   updatedAt: bigint
+   title: text
+   slug: text
+   iframe_url: text
+   description: text
+   panel_type: text
+   tags: json
+   is_default: boolean
+   metadata: json
+   id: integer
+}
+class log_settings {
+   createdAt: bigint
+   updatedAt: bigint
+   retention_days: real
+   rotation_interval_minutes: real
+   id: integer
+}
+class logs {
+   createdAt: bigint
+   updatedAt: bigint
+   criticality: text
+   source: text
+   log: text
+   stack: text
+   metadata: jsonb
+   id: integer
+}
+class media_assets {
+   createdAt: bigint
+   updatedAt: bigint
+   filename: text
+   mime: text
+   size: real
+   storage: text
+   storage_path: text
+   key: text
+   id: integer
+}
+class mqtt_servers {
+   createdAt: bigint
+   updatedAt: bigint
+   code: text
+   name: text
+   broker_url: text
+   topic: text
+   username: text
+   password: text
+   client_id: text
+   connect_timeout: real
+   is_default: boolean
+   metadata: json
+   id: integer
+}
+class multimedia_items {
+   createdAt: bigint
+   updatedAt: bigint
+   slug: text
+   title_en: text
+   title_es: text
+   description_en: text
+   description_es: text
+   embed_url: text
+   thumbnail_url: text
+   order_index: real
+   is_published: boolean
+   id: integer
+}
+class parameters {
+   createdAt: bigint
+   updatedAt: bigint
+   param_key: text
+   legacy_key: text
+   display_name: text
+   definition: text
+   acceptable_range: text
+   data_type: text
+   unit: text
+   validation_config: json
+   metadata: json
+   is_active: boolean
+   id: integer
+}
+class permissions {
+   createdAt: bigint
+   updatedAt: bigint
+   NombreUsuario: text
+   Contrasena: text
+   id: integer
+}
+class queries {
+   createdAt: bigint
+   updatedAt: bigint
+   name: text
+   slug: text
+   description: text
+   definition: json
+   last_executed_at: timestamp with time zone
+   export_options: json
+   id: integer
+}
+class resetpassword {
+   createdAt: bigint
+   updatedAt: bigint
+   code: text
+   changed_at: timestamp
+   expiresAt: timestamp
+   user_id: integer
+   id: integer
+}
+class resource_carousel_items {
+   createdAt: bigint
+   updatedAt: bigint
+   slug: text
+   title_en: text
+   title_es: text
+   description_en: text
+   description_es: text
+   cta_label_en: text
+   cta_label_es: text
+   cta_url: text
+   image_url: text
+   order_index: real
+   is_published: boolean
+   id: integer
+}
+class samples {
+   createdAt: bigint
+   updatedAt: bigint
+   station_code: text
+   station_latitude: real
+   station_longitude: real
+   collection_latitude: real
+   collection_longitude: real
+   recorded_at: timestamp with time zone
+   metrics: json
+   metadata: json
+   source: text
+   received_at: timestamp with time zone
+   station_id: integer
+   id: integer
+}
+class stations {
+   createdAt: bigint
+   updatedAt: bigint
+   station_name: text
+   station_code: text
+   latitude: real
+   longitude: real
+   location_description: text
+   location: json
+   placed_at: timestamp
+   last_status: timestamp
+   community_id: integer
+   id: integer
+}
+class translations {
+   createdAt: bigint
+   updatedAt: bigint
+   site: varchar(32)
+   locale: varchar(16)
+   key: varchar(255)
+   value: text
+   description: text
+   composite_key: text
+   id: integer
+}
+class user {
+   createdAt: bigint
+   updatedAt: bigint
+   email: text
+   password: text
+   first_name: text
+   last_name: text
+   user_type: text
+   status: text
+   email_verified_at: timestamp
+   last_login_at: timestamp
+   id: integer
+}
+
+community_images         -[#595959,plain]-^  communities             : "community_id:id"
+resetpassword            -[#595959,plain]-^  user                    : "user_id:id"
+samples                  -[#595959,plain]-^  stations                : "station_id:id"
+stations                 -[#595959,plain]-^  communities             : "community_id:id"
+@enduml
