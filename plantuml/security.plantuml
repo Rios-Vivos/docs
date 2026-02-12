@@ -27,18 +27,18 @@ actor "Public User" as Public
 actor "Admin/Editor" as Admin
 actor "Monitoring Device" as Sensor
 
-rectangle "rios-vivos-web\n(Next.js - public site)" as Web {
+rectangle "web-page\n(Next.js - public site)" as Web {
   component "Public UI\n(browser SPA/SSR)" as WebUI
 }
 
-rectangle "rios-vivos-admin\n(Next.js dashboard)" as AdminApp {
+rectangle "system-admin\n(Next.js dashboard)" as AdminApp {
   component "Admin UI\n(content + user management)" as AdmUI
   component "Grafana Embed" as AdmGraf
 }
 
 rectangle "Edge Layer\n(Cloudflare/Nginx TLS + WAF/rate limit)" as Edge
 
-rectangle "rios-vivos-api\n(Sails.js on Docker/EC2)" as API {
+rectangle "system-api\n(Sails.js on Docker/EC2)" as API {
   component "API Gateway & Routing\n(REST/CORS)" as APIGW
   component "Auth Service\n(login, JWT/session, reset)" as Auth
   component "CRUD: Home/Activities/Resources/Communities" as CRUDContent
