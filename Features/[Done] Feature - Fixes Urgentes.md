@@ -1,2 +1,3 @@
-Descripción de los errores anexa en el documento
+# [Done] Feature: Fixes Urgentes
 
+Descripción de errores adjunta en `Docs/Files/Deficiencias de la pagina.docx`.

@@ -1,58 +1,37 @@
+# [Done] Feature: S3 Image Loader
+
+## Escenario BDD
+```gherkin
 Feature: Load S3 images
-Scenario: Open Landing Page
-  When the visitante open the Landing Page
-  Then the page request images to the images provider
- 
+  Scenario: Open Landing Page
+    When the visitante opens the Landing Page
+    Then the page requests images from the images provider
+```
 
-Opciones de modulo de carga de imagenes
+## Opciones de módulo de carga de imágenes
+### Amazon S3
+Amazon Simple Storage Service (S3) ofrece almacenamiento de objetos con alta disponibilidad, seguridad y rendimiento. Permite escalar, organizar y proteger datos con controles de acceso detallados.
 
-S3
+**Costos**
 
-Amazon Simple Storage Service (Amazon S3) es un servicio de almacenamiento de objetos que ofrece escalabilidad, disponibilidad de datos, seguridad y rendimiento líderes en el sector. Millones de clientes de todos los tamaños y sectores pueden almacenar, administrar, analizar y proteger cualquier cantidad de datos para prácticamente cualquier caso de uso, como los lagos de datos, las aplicaciones nativas en la nube y las aplicaciones móviles. Gracias a las clases de almacenamiento rentables y a las características de administración fáciles de usar, es posible optimizar los costos, organizar y analizar los datos y configurar controles de acceso detallados para cumplir con requisitos empresariales y de conformidad específicos.
+![Costos S3](../img/image-20250302-232418.png)
 
-Costos
+Referencias: Precios de S3.
 
-image-20250302-232418.png
-Referencias
+### Cloudflare R2 Storage
+Almacenamiento de objetos sin cargos de egreso elevados. Casos de uso: contenido web, podcasts, data lakes, salidas de procesos batch (p. ej. modelos ML).
 
-Precios de S3 
+**Costos**
 
- 
+![Costos R2](../img/image-20250302-231830.png)
+![Costos R2 detalle](../img/image-20250302-231902.png)
 
-Cloudflare R2 Storage
+Referencias: Pricing.
 
-It allows developers to store large amounts of unstructured data without the costly egress bandwidth fees associated with typical cloud storage services.
+## Elección final
+Se seleccionó S3 en AWS porque la infraestructura principal ya está en AWS y existe un ecosistema amplio de herramientas y soporte.
 
-You can use R2 for multiple scenarios, including but not limited to:
-
-Storage for cloud-native applications
-
-Cloud storage for web content
-
-Storage for podcast episodes
-
-Data lakes (analytics and big data)
-
-Cloud storage output for large batch processes, such as machine learning model artifacts or datasets
-
-Costos
-
-image-20250302-231830.png
-image-20250302-231902.png
-Referencias
-
-Pricing 
-
- 
-
-Elección Final
-
-Se selecciono al servicio de S3 en AWS ya que gran parte de la infraestructura se encuentra en AWS y ademas por la facilidad con la que se pueden encontrar herramientas que accedan a S3.
-
- 
-
-Plan de Implementación
-
-El frontend deberá ser cargado con un componente que permita consumir imagenes desde un s3 de manera segura (hay casos como en next.js donde esto se hace automatico con un .env). Puede que sea necesario algun token de seguridad para desbloquear la imagen.
-
-Tambien se modificara la provision de las imagenes que ya se encuentran en la pagina con el nuevo componente
+## Plan de implementación
+- Cargar el frontend con un componente que consuma imágenes desde S3 de manera segura (en Next.js puede resolverse con configuración `.env`).
+- Incluir token o mecanismo de seguridad si es necesario.
+- Migrar la provisión de imágenes existentes al nuevo componente.
