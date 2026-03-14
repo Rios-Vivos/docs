@@ -32,8 +32,6 @@
 
 El propósito de este documento es presentar una descripción detallada del proyecto “Pagina Web Rios Vivos“. Este documento explicara el propósito de las características, las interfaces y las funciones que el sistema tendrá. También incluirá los limites sobre los que operará y como reaccionará ante actividades externas. Este documento está pensado para que ambos, stakeholders y los desarrolladores puedan desarrollar acuerdos sobre lo que será aprobado en el sistema.
 
-
-
 ### Vistazo del documento
 
 En el siguiente capitulo, la sección de descripción general, nos da un vistazo sobre las funcionalidades del producto. Describe de forma informal los requerimientos y es usado para establecer contexto para los requerimientos técnicos en el siguiente capitulo.
@@ -59,11 +57,9 @@ Esta pagina será diseñada para los que se quieran enterar de quienes son Rios 
 | 6 | Sistema de comunicación | | |
 | 7 | Repositorio de información | | |
 
+### Roadmap del Proyecto
 
-
-Roadmap del Proyecto
-
- 
+Pendiente de actualización.
 
 ## Descripción General
 
@@ -91,8 +87,6 @@ Enlace al glosario [aqui](Glossary.md)
 | Comunidades | Comunidades aledañas al Rio Santiago | |
 | Admin | Miembros tecnicos de Rios Vivos pueden acceder a los sistemas | |
 
-
-
 ### Características de Publico Objetivo Admin
 
 | User Type | Description | Feature Access |
@@ -100,8 +94,6 @@ Enlace al glosario [aqui](Glossary.md)
 | General | Primer registro, acceso a actividades básicas y principalmente de búsqueda. Sin edición de información | |
 | Staff | Miembros autorizados por Rios Vivos para ejercer modificaciones en las paginas. | |
 | Superadmin | Miembros de Rios Vivos con la autorización de hacer modificaciones en la configuración del sistema | |
-
-
 
 ### Casos de Uso
 
@@ -171,41 +163,36 @@ Diagrama de la infraestructura en AWS. Creada a través de Terraform.
 
 ### Arquitectura de la pagina
 
-Para realizar tener un objetivo claro y poder reproducir el conocimiento de los productos, se compartirán diseños de la arquitectura del sitio.
+Para tener un objetivo claro y reproducir el conocimiento de los productos, se comparten los siguientes diseños de la arquitectura del sitio.
 
+#### Diagrama de infraestructura
 ![Infrastructure Diagram](img/infra-diagram.png)
 
-Diagrama de sitio objetivo
-
-Propuesta de sitio v2
+#### Diagrama de sitio objetivo
+Propuesta de sitio v2.
 
 ![Objective Diagram](img/objective-diagram.png)
 
-Sitio v1 (Outdated)
-
+#### Sitio v1 (Outdated)
 ![Objective Diagram Old Version](img/objective-diagram-old.png)
 
-Diagrama de CI/CD
-
-Aqui se detalla el proceso de CI/CD
+#### Diagrama de CI/CD
+Aquí se detalla el proceso de CI/CD.
 
 ![CI/CD Diagram](img/CICD-diagram.png)
 
-Diagrama de Base de datos
-
-Aquí se detallará la definición de la base de datos con PlantUML
+#### Diagrama de Base de datos
+Aquí se detalla la definición de la base de datos con PlantUML.
 
 [Database Diagram](plantuml/db.plantuml)
 
-Mockups
-
+#### Mockups
 Para definir los mockups utilizaremos Figma:
 
-[Figma](https://www.figma.com/design/IHxVn6XNWDOlzsbPpP6x23/Sitio-riosvivos.org?node-id=0-1&t=svipedhnQEwFXSnM-1) 
+[Figma](https://www.figma.com/design/IHxVn6XNWDOlzsbPpP6x23/Sitio-riosvivos.org?node-id=0-1&t=svipedhnQEwFXSnM-1)
 
-Diagrama de Seguridad
-
-Aquí se detallará la definición de los riesgos de seguridad en el sitio
+#### Diagrama de Seguridad
+Aquí se detalla la definición de los riesgos de seguridad en el sitio.
 
 [Security Diagram](plantuml/security.plantuml)
 
@@ -251,8 +238,6 @@ Aquí se detallarán las posibles amenazas de seguridad y la manera en la que se
 | Data Science | Data scientist jr (Python/SQL/ML básico) | $30,000.00 | $360,000.00 |
 | Scrum Master | Scrum Master / facilitación ágil jr | $28,000.00 | $336,000.00 |
 | Business Analyst | BA jr (levantamiento reqs / métricas / backlog) | $18,000.00 | $216,000.00 |
-
-
 
 ### Requerimientos Funcionales
 
