@@ -216,4 +216,83 @@ ALTER TABLE samples
   ADD CONSTRAINT samples_owner_xor_chk
   CHECK (((station_id IS NOT NULL)::int + (sampling_point_id IS NOT NULL)::int) = 1);
 
+CREATE TABLE IF NOT EXISTS settings (
+  id SERIAL PRIMARY KEY,
+  scope VARCHAR(32) NOT NULL DEFAULT 'global',
+  config VARCHAR(255) NOT NULL,
+  value JSONB NULL,
+  user_id UUID NULL REFERENCES "user"(id) ON DELETE CASCADE,
+  "createdAt" BIGINT NULL,
+  "updatedAt" BIGINT NULL
+);
+
+CREATE UNIQUE INDEX IF NOT EXISTS settings_global_config_uidx
+  ON settings(scope, config)
+  WHERE user_id IS NULL;
+
+CREATE UNIQUE INDEX IF NOT EXISTS settings_user_config_uidx
+  ON settings(scope, config, user_id)
+  WHERE user_id IS NOT NULL;
+
+INSERT INTO settings (scope, config, value, user_id, "createdAt", "updatedAt")
+SELECT
+  'global' AS scope,
+  'logs.retentionDays' AS config,
+  to_jsonb(COALESCE(ls.retention_days, 30)) AS value,
+  NULL AS user_id,
+  CAST(EXTRACT(EPOCH FROM NOW()) * 1000 AS BIGINT) AS "createdAt",
+  CAST(EXTRACT(EPOCH FROM NOW()) * 1000 AS BIGINT) AS "updatedAt"
+FROM log_settings ls
+WHERE NOT EXISTS (
+  SELECT 1
+  FROM settings s
+  WHERE s.scope = 'global'
+    AND s.config = 'logs.retentionDays'
+    AND s.user_id IS NULL
+)
+ORDER BY ls.id ASC
+LIMIT 1;
+
+INSERT INTO settings (scope, config, value, user_id, "createdAt", "updatedAt")
+SELECT
+  'global' AS scope,
+  'logs.rotationIntervalMinutes' AS config,
+  to_jsonb(COALESCE(ls.rotation_interval_minutes, 60)) AS value,
+  NULL AS user_id,
+  CAST(EXTRACT(EPOCH FROM NOW()) * 1000 AS BIGINT) AS "createdAt",
+  CAST(EXTRACT(EPOCH FROM NOW()) * 1000 AS BIGINT) AS "updatedAt"
+FROM log_settings ls
+WHERE NOT EXISTS (
+  SELECT 1
+  FROM settings s
+  WHERE s.scope = 'global'
+    AND s.config = 'logs.rotationIntervalMinutes'
+    AND s.user_id IS NULL
+)
+ORDER BY ls.id ASC
+LIMIT 1;
+
+INSERT INTO settings (scope, config, value, user_id, "createdAt", "updatedAt")
+SELECT
+  'global' AS scope,
+  defaults.config,
+  defaults.value,
+  NULL AS user_id,
+  CAST(EXTRACT(EPOCH FROM NOW()) * 1000 AS BIGINT) AS "createdAt",
+  CAST(EXTRACT(EPOCH FROM NOW()) * 1000 AS BIGINT) AS "updatedAt"
+FROM (
+  VALUES
+    ('logs.retentionDays', to_jsonb(30)),
+    ('logs.rotationIntervalMinutes', to_jsonb(60))
+) AS defaults(config, value)
+WHERE NOT EXISTS (
+  SELECT 1
+  FROM settings s
+  WHERE s.scope = 'global'
+    AND s.config = defaults.config
+    AND s.user_id IS NULL
+);
+
+DROP TABLE IF EXISTS log_settings;
+
 COMMIT;
