@@ -59,7 +59,7 @@ Módulo de registro, administración, integración y visualización de datos amb
 - Una etiqueta de estación representa una membresía de proyecto cuando se usa como filtro en Operaciones. Las etiquetas son texto libre, se comparan sin distinguir mayúsculas/minúsculas y no requieren prefijo; el selector muestra las etiquetas que ya existen en estaciones. Los grupos semilla usan nombres como `ITESO`, `calidad-aire` y `ZMG-aire`, no nombres de cuerpos de agua. Una estación sin etiqueta no pertenece a ningún proyecto y la vista sin selección conserva el alcance global.
 - La pantalla de registro manual contiene únicamente el formulario de muestra personalizada; no ofrece un emisor de payload MQTT de prueba. El emisor de prueba MQTT está disponible en Administración → Monitoreo → MQTT, junto a la configuración de brokers.
 - La administración de paneles de Grafana primero muestra la lista de paneles; al seleccionar uno (o crear uno nuevo) se muestra su vista previa embebida y el formulario de edición con ayudas de campo.
-- Los embeds de paneles de Grafana usan el modo de panel individual, sin la navegación ni controles del dashboard completo.
+- Los embeds de paneles de Grafana usan el modo de panel individual, sin la navegación ni controles del dashboard completo. Las URLs de dashboard con `viewPanel` se normalizan a `d-solo`; los atajos `/goto/` se rechazan porque no identifican de forma estable el panel. Usar Grafana → Share → Embed.
 - Mantener bitácoras de carga y modificaciones para auditoría operativa.
 - Monitorear estado de estaciones y configurar alertas ante desconexión de fuentes.
 - El sistema debe soportar crecimiento dinámico de volumen de datos y configuración de estaciones/parámetros.
