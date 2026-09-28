@@ -55,6 +55,7 @@ Módulo de registro, administración, integración y visualización de datos amb
 
 ## Rules
 - Los datos se almacenan de forma granular con trazabilidad a estación, parámetro y fuente de ingreso (CSV/interfaz/API/MQTT).
+- Una etiqueta de estación representa una membresía de proyecto cuando se usa como filtro en Operaciones. Las etiquetas son texto libre, se comparan sin distinguir mayúsculas/minúsculas y no requieren prefijo; el selector muestra las etiquetas que ya existen en estaciones. Una estación sin etiqueta no pertenece a ningún proyecto y la vista sin selección conserva el alcance global.
 - Mantener bitácoras de carga y modificaciones para auditoría operativa.
 - Monitorear estado de estaciones y configurar alertas ante desconexión de fuentes.
 - El sistema debe soportar crecimiento dinámico de volumen de datos y configuración de estaciones/parámetros.
