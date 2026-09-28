@@ -1,3 +1,13 @@
+-- One-time PostgreSQL migration for the monitoring-sampling-points feature.
+--
+-- Contract source: system-api/api/models/MonitoringSamples.js,
+-- MonitoringSamplingPoints.js, MonitoringSampleCatalog.js, Settings.js, and
+-- system-api/api/services/SettingsService.js on system-api main.
+--
+-- Run only after a current database backup has been restored and validated in
+-- staging.  See monitoring-sampling-points-hard-cut.md for assumptions and
+-- verification queries.
+
 BEGIN;
 
 CREATE TABLE IF NOT EXISTS sample_catalogs (
@@ -8,8 +18,8 @@ CREATE TABLE IF NOT EXISTS sample_catalogs (
   description TEXT NULL,
   sort_order INTEGER NOT NULL DEFAULT 0,
   is_active BOOLEAN NOT NULL DEFAULT TRUE,
-  "createdAt" TIMESTAMP WITHOUT TIME ZONE NOT NULL DEFAULT NOW(),
-  "updatedAt" TIMESTAMP WITHOUT TIME ZONE NOT NULL DEFAULT NOW(),
+  "createdAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+  "updatedAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
   UNIQUE (category, code)
 );
 
@@ -24,8 +34,8 @@ CREATE TABLE IF NOT EXISTS sampling_points (
   latitude DOUBLE PRECISION NULL,
   longitude DOUBLE PRECISION NULL,
   metadata JSONB NOT NULL DEFAULT '{}'::jsonb,
-  "createdAt" TIMESTAMP WITHOUT TIME ZONE NOT NULL DEFAULT NOW(),
-  "updatedAt" TIMESTAMP WITHOUT TIME ZONE NOT NULL DEFAULT NOW()
+  "createdAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+  "updatedAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
 );
 
 INSERT INTO sample_catalogs (category, code, name, description, sort_order, is_active)
@@ -180,10 +190,6 @@ WHERE s.station_id IS NULL
     'g'
   ));
 
-CREATE UNIQUE INDEX IF NOT EXISTS samples_sample_code_unique_idx
-  ON samples(sample_code)
-  WHERE sample_code IS NOT NULL;
-
 DELETE FROM parameters
 WHERE param_key IN (
   'community_code',
@@ -212,9 +218,19 @@ ALTER TABLE samples
   DROP COLUMN IF EXISTS collection_latitude,
   DROP COLUMN IF EXISTS collection_longitude;
 
-ALTER TABLE samples
-  ADD CONSTRAINT samples_owner_xor_chk
-  CHECK (((station_id IS NOT NULL)::int + (sampling_point_id IS NOT NULL)::int) = 1);
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1
+    FROM pg_constraint
+    WHERE conname = 'samples_owner_xor_chk'
+      AND conrelid = 'samples'::regclass
+  ) THEN
+    ALTER TABLE samples
+      ADD CONSTRAINT samples_owner_xor_chk
+      CHECK (((station_id IS NOT NULL)::int + (sampling_point_id IS NOT NULL)::int) = 1);
+  END IF;
+END $$;
 
 CREATE TABLE IF NOT EXISTS settings (
   id SERIAL PRIMARY KEY,
@@ -293,6 +309,7 @@ WHERE NOT EXISTS (
     AND s.user_id IS NULL
 );
 
-DROP TABLE IF EXISTS log_settings;
+-- Keep log_settings.  system-api still declares the legacy model and
+-- SettingsService backfills settings from it when the table is present.
 
 COMMIT;
