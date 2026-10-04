@@ -1,0 +1,58 @@
+@startuml
+title Rios Vivos — asynchronous ingestion and answer workflow
+autonumber
+
+actor User
+participant "Web/Admin client" as Client
+participant "system-api" as API
+database "PostgreSQL\nACL + job state" as DB
+queue "Durable queue" as Queue
+participant "AI-host worker" as Worker
+database "Source storage\nS3 or encrypted disk" as Store
+database "Vector index" as Index
+participant "Local model" as Model
+participant "WebSocket" as WS
+
+== Ingest a document version ==
+User -> Client : choose file
+Client -> API : upload / request ingestion
+API -> DB : validate ownership, visibility, version
+API -> Store : save immutable source version
+API -> DB : create job(queued)
+API -> Queue : enqueue(document-id:version:checksum)
+API --> Client : 202 + jobId
+API -> WS : queued
+WS --> Client : progress event
+Worker -> Queue : reserve job
+Worker -> DB : state: extracting / chunking / embedding
+Worker -> Store : read source
+Worker -> Index : upsert chunks with document/version IDs
+Worker -> DB : indexed + audit
+Worker -> WS : completed
+WS --> Client : completed + version
+
+== Ask a question ==
+User -> Client : ask question
+Client -> API : create RAG query
+API -> DB : authenticate; derive allowed document versions
+alt no authorized sources
+  API -> DB : result(not-supported or denied)
+  API --> Client : terminal result
+else allowed sources
+  API -> DB : create query job(queued)
+  API -> Queue : enqueue(query job + ACL scope)
+  API --> Client : 202 + jobId
+  Worker -> Queue : reserve job
+  Worker -> Index : retrieve only allowed versions
+  Worker -> Model : question + retrieved passages
+  Model --> Worker : answer + cited chunks or not-supported
+  Worker -> DB : result, citations, model versions, audit
+  Worker -> WS : completed
+  WS --> Client : answer + citations
+end
+
+note over Client,WS
+Polling the persisted job record is the fallback after
+disconnects; WebSocket events alone are never authoritative.
+end note
+@enduml

@@ -1,7 +1,7 @@
 # Feature: Document repository roadmap
 
-**Status:** Planned expansion. RAG is an implemented capability; this record
-covers the future governed repository that will provide durable source access.
+**Status:** Planned expansion. The governed repository provides durable source
+access for the proposed RAG capability; it is not implemented by this record.
 
 **Owning repositories:** `web-page`, `system-api`, and `system-admin`.
 
@@ -40,3 +40,10 @@ documents the requesting user is allowed to access.
 - Replacing or removing a document updates search and RAG indexes predictably.
 - A pilot defines target questions, quality metrics, human review, operating
   cost, and a deletion/recovery procedure before public release.
+
+## Related RAG design
+
+The self-hosted model, asynchronous queue/WebSocket workflow, source-citation
+requirements, hardware limits, cost baseline, and pilot gates are defined in
+[Self-hosted RAG for environmental documents](Review-LLM_RAG.md). This record
+remains the source of truth for repository governance and document lifecycle.

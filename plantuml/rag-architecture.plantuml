@@ -1,0 +1,55 @@
+@startuml
+title Rios Vivos — proposed self-hosted RAG architecture
+left to right direction
+skinparam shadowing false
+skinparam componentStyle rectangle
+
+actor "Authorized internal\nuser" as user
+rectangle "Rios Vivos application boundary" {
+  [Web / Admin client] as client
+  [system-api\nAuth, ACL, jobs, audit] as api
+  database "PostgreSQL\nmetadata, ACL, document versions,\njob state, audit" as pg
+  queue "Redis / durable queue\ningestion + query jobs" as queue
+  [Authenticated\nWebSocket gateway] as ws
+}
+
+cloud "Private source storage\nS3 OR encrypted AI-host disk\noriginal files + versions" as objectstore
+
+node "Private AI host\n4th-gen Intel Core i7\nGTX 680 optional; CPU-first baseline" {
+  [Worker] as worker
+  [Text extraction / OCR] as extract
+  [Local multilingual\nembedding service] as embed
+  database "Self-hosted vector index\nchunk vectors + document/version IDs" as vector
+  [Local quantized\nanswer model] as llm
+}
+
+user --> client : upload / question
+client --> api : HTTPS + authenticated session
+api --> pg : authorize; create/read job
+api --> queue : enqueue only after authorization
+api --> ws : publish persisted job state
+ws --> client : authorized progress/result event
+client --> api : poll fallback; download citation
+
+worker --> queue : reserve idempotent job
+worker --> pg : read ACL scope, metadata; write status/audit
+worker --> objectstore : read authorized source version
+worker --> extract : extract + normalize
+extract --> embed : chunks
+embed --> vector : vectors + provenance metadata
+
+worker --> vector : retrieve using API ACL allow-list
+worker --> llm : question + authorized passages only
+llm --> worker : grounded answer + cited chunk IDs
+worker --> pg : store result/citations/status
+
+note bottom of api
+The vector index is not an authorization boundary.
+API-derived document/version filters are mandatory.
+end note
+
+note bottom of vector
+Derived, rebuildable data. Originals and ACLs
+do not live only in the vector index.
+end note
+@enduml
