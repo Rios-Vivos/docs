@@ -64,6 +64,10 @@ El roadmap operativo y la trazabilidad con issues se mantiene en el
 el comportamiento verificado o planificado; una issue cerrada no reemplaza la
 verificación contra el repositorio dueño.
 
+La sección “Etapas” conserva el plan histórico. Para conocer las capacidades
+implementadas actualmente se debe usar el mapa de features implementadas en el
+catálogo, no inferir estado a partir de esa tabla.
+
 ## Descripción General
 
 ### Glosario
@@ -74,7 +78,6 @@ Enlace al glosario [aqui](Glossary.md)
 
 | Feature | Descripción |
 |---------|-------------|
-| RAG | Búsqueda de información pertinente en grandes cantidades de documentos utilizando IA |
 | Optimización de Sistema | Corrección y limpieza del sistema, mejoras en los procesos de desarrollo continuo y migracion a un servicio serverless para economizar la infraestructura. |
 | Sistema de Comunicación | Se agrega la opcion de enviar articulos de opinion que puedan ser posteriormente agregados en un blog. |
 | Repositorio de Información | Interfaz para la subida, descarga, busqueda y filtrado de documentos. |

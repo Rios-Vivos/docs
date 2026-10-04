@@ -1,6 +1,7 @@
-# Feature: Document repository and RAG-assisted search
+# Feature: Document repository roadmap
 
-**Status:** Planned. RAG is not a substitute for the underlying repository.
+**Status:** Planned expansion. RAG is an implemented capability; this record
+covers the future governed repository that will provide durable source access.
 
 **Owning repositories:** `web-page`, `system-api`, and `system-admin`.
 
