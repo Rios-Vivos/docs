@@ -1,0 +1,37 @@
+@startuml
+title Rios Vivos — what happens after upload and chat questions
+autonumber
+
+actor User
+participant "Existing upload page\n/dashboard/management/rag" as Upload
+participant "Existing chat page\n/dashboard/rag" as Chat
+participant "system-api" as API
+queue "Task queue" as Queue
+participant "AI computer" as AI
+database "Saved task status" as Status
+
+== Upload or replace a document ==
+User -> Upload : choose file
+Upload -> API : upload file
+API -> Status : save Waiting
+API -> Queue : add file task
+API --> Upload : show Waiting
+Queue -> AI : read and prepare file for search
+AI -> Status : Ready or Failed
+API --> Upload : show live status\n(or page asks for saved status)
+
+== Ask in chat ==
+User -> Chat : send question
+Chat -> API : ask question
+API -> Status : save Preparing answer
+API -> Queue : add question task
+API --> Chat : show Preparing answer
+Queue -> AI : find allowed text\nand write answer
+AI -> Status : save answer and sources
+API --> Chat : show answer\nwith document links and quotes
+
+note over Upload,Chat
+The page never waits for the AI computer.
+It shows progress while the task runs in the background.
+end note
+@enduml

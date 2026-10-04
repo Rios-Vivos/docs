@@ -1,0 +1,58 @@
+@startuml
+title Rios Vivos — document chat pilot
+left to right direction
+skinparam shadowing false
+skinparam componentStyle rectangle
+
+actor "Internal user" as user
+
+rectangle "Existing admin pages" {
+  [File upload\n/dashboard/management/rag] as upload
+  [Chat\n/dashboard/rag] as chat
+}
+
+[system-api\nchecks access and saves task status] as api
+cloud "WireGuard VPN\nprivate API-to-AI link" as vpn
+queue "Task queue\nwaiting list for slow work" as queue
+database "Database\nfile information, permissions, task status" as db
+database "PostgreSQL reporting views\nread-only monitoring reports" as reports
+cloud "Private file storage\nS3 or AI-computer disk" as files
+
+node "Private AI computer\n4th-gen Intel Core i7\nGTX 680 used if supported" {
+  [RAG worker\npulls approved jobs] as worker
+  [Read files and prepare search] as prepare
+  database "Search index\nsmall text pieces linked to files" as index
+  [Find sources and write answer] as answer
+}
+
+user --> upload : add or replace file
+user --> chat : ask question
+upload --> api : file request
+chat --> api : question
+api --> db : check permission\nsave task status
+api --> files : save private file
+api --> queue : add background task
+api --> chat : show saved progress\nand final answer
+api --> reports : own reviewed views
+api --> vpn : private task service
+vpn --> worker : claim job; report progress/result
+
+worker --> prepare : file task
+prepare --> files : read file
+prepare --> index : build or update search index
+worker --> answer : question task
+answer --> index : search allowed text only
+worker --> reports : read approved reports only
+answer --> api : answer + source locations
+api --> db : save result and task status
+
+note bottom of chat
+Chat shows an answer with source links.
+It shows progress while slow work is running.
+end note
+
+note bottom of index
+The search index can be rebuilt.
+Original files stay in private storage.
+end note
+@enduml
