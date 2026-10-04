@@ -1,176 +1,141 @@
-# Feature: Self-hosted RAG for environmental documents
+# Feature: Internal document chat pilot
 
-**Status:** Proposed architecture; no runtime feature is implemented by this
-record.
+**Status:** Proposal only. This document does not implement a feature.
 
-**Source issue:** [RAG analysis #119](https://github.com/Rios-Vivos/web-page/issues/119)
-(administratively filed in `web-page`; the owning documentation project is
-`docs`).
+**Source issue:** [RAG analysis #119](https://github.com/Rios-Vivos/web-page/issues/119).
+The work belongs in `docs`; the future backend work belongs in `system-api`.
 
-**Runtime owner when approved:** `system-api`. **Dependent clients:**
-`system-admin` and, only if separately approved, `web-page`.
+## Goal
 
-## Purpose and boundaries
+Let internal Ríos Vivos users upload many environmental documents and ask about
+them in a chat. Every answer must show the document, version, and page or text
+part used for the answer. A user may only search documents that they are
+allowed to open.
 
-Ríos Vivos needs an internal capability to ingest a large and growing corpus of
-environmental documents, then answer questions using only the documents that
-the requesting person is authorized to read. Every answer must identify the
-supporting document, version, and location in that document so the person can
-verify it.
+This is a pilot. It uses the computer already available: a fourth-generation
+Intel Core i7 with a GTX 680. The GTX 680 is useful because it already exists,
+but the pilot must work without depending on it. Results from the pilot decide
+whether newer hardware is worth buying.
 
-This is a technical proposal, not an API contract or implementation plan. The
-current `system-api` code was checked on 2026-10-04 and contains no RAG, LLM,
-embedding, or vector-search implementation. Consequently, the previous
-"implemented" status must not be inferred from this record.
+## Use the existing admin pages
 
-The first release is internal only. It does not train a model on Ríos Vivos
-documents, make documents public, replace a document repository, or make the
-model an authority on environmental or legal conclusions.
+No new admin screens are needed for the pilot.
 
-The governing repository requirements—metadata, uploads, downloads, retention,
-and access policy—remain in the
-[Document repository roadmap](Review-Document_Repository_and_RAG.md). This
-record is the canonical technical design for RAG.
-
-## Design at a glance
-
-[Architecture diagram (PlantUML)](../plantuml/rag-architecture.plantuml)
-shows the trust boundaries and durable data flows. [Async workflow diagram
-(PlantUML)](../plantuml/rag-async-workflow.plantuml) shows why a slow upload,
-reindex, or answer never holds an HTTP request open.
-
-1. The application authenticates the caller and authorizes the document action
-   in `system-api` before it can enqueue an ingestion or question job.
-2. Redis (or an equivalent durable queue) carries idempotent jobs to a worker
-   on the dedicated AI host. The API immediately returns a job identifier;
-   clients receive progress through an authenticated WebSocket and can fall
-   back to polling.
-3. The worker extracts text, creates chunks and multilingual embeddings, and
-   stores only searchable chunk vectors in the vector index. Original files
-   live in S3 or on the AI host disk; metadata, ACLs, job state, and audit
-   events remain in PostgreSQL.
-4. For a question, the API determines the caller's permitted document versions
-   before vector retrieval. The worker retrieves only from that allow-list,
-   optionally reranks the results, and asks a local model to answer from those
-   passages. It returns a structured answer with citations, or an explicit
-   "not supported by authorized sources" outcome.
-
-The AI host must be on a private network. It accepts work from the API through
-an authenticated, encrypted channel; it is not an Internet-facing document
-server.
-
-## Source storage and lifecycle
-
-| Concern | Required approach |
-| --- | --- |
-| Source of truth | Choose one per environment: an encrypted private S3 bucket or an encrypted directory on the AI host. The vector index is a derived cache, never the only copy of a document. |
-| Local-disk option | Lowest incremental cost when the host has reliable SSD capacity. It requires monitored free space, a tested encrypted off-host backup, and replacement/recovery procedures. |
-| S3 option | Keeps the AI host replaceable and simplifies durable backups. Use private objects, versioning/retention chosen by policy, server-side encryption, and short-lived authorized downloads; do not make a bucket public for RAG. |
-| Ingestion | Validate MIME type and size, malware-scan where available, calculate a SHA-256 checksum, preserve the source version, and retain extraction errors for review. Unsupported or scanned-failed files never enter the index. |
-| Update/remove | A new file version creates a new versioned ingestion job. Revocation immediately removes the version from authorization and retrieval; a worker then deletes vectors and derived text. Record the outcome and preserve only what retention policy requires. |
-
-Each chunk must retain `document_id`, `document_version`, checksum, source
-location, page/section (when extraction can provide it), model version, and
-chunking version. These fields make a citation reproducible and make a changed
-embedding model or chunking policy reindexable.
-
-## Asynchronous jobs and live status
-
-Use two queues: `document-ingestion` and `rag-query`. Every job has a stable
-idempotency key (`document-id:version:checksum` for ingestion; a generated
-request ID for questions), a requesting user, timestamps, retry count, and a
-terminal result. A worker must tolerate duplicate delivery.
-
-| Job | States exposed to the client | Terminal result |
+| User need | Existing page | Pilot change |
 | --- | --- | --- |
-| Upload/reindex | `queued` → `validating` → `extracting` → `chunking` → `embedding` → `indexing` | `completed`, `failed`, or `cancelled`, with document version and error category |
-| Question | `queued` → `authorizing` → `retrieving` → `reranking` (optional) → `generating` | `completed`, `not-supported`, `denied`, `failed`, or `cancelled`, with citations |
-| Delete/revoke | `queued` → `revoked` → `purging-derived-data` | `completed` or `failed`; retrieval remains denied from the first state |
+| Upload and manage documents | [`/dashboard/management/rag/`](https://admin.riosvivos.org/dashboard/management/rag/) | Keep this page as the place where users add, replace, and remove documents. Show the processing status for each file. |
+| Ask about documents | [`/dashboard/rag/`](https://admin.riosvivos.org/dashboard/rag/) | Keep the current chat layout. A question may take time; show its status in the chat, then show the answer and source links. |
 
-The conceptual interaction is `POST …/jobs` → `202 Accepted` with `jobId`,
-then authenticated `GET …/jobs/{jobId}` and a WebSocket event channel scoped to
-that owner or authorized administrator. WebSockets improve progress reporting;
-they are not the source of truth, so reconnection must read the stored job
-state. Exact route names and payloads are deliberately deferred to the API
-implementation issue.
+The checked `system-admin` code confirms that the first page uses
+`MediaFileManagerView` and the second page reuses `ChatView`. The checked
+`system-api` main branch has no RAG, local-model, or document-search backend
+yet. The pages are the UI starting point, not proof that the feature works.
 
-## Retrieval, answer, and citation rules
+## Simple system picture
 
-- Authorization happens twice: the API authorizes the action and computes an
-  allowed document/version set; the worker applies that set as a mandatory
-  retrieval filter. A vector database ACL alone is not sufficient.
-- The model receives the question plus retrieved, authorized passages—not the
-  whole corpus. Its instruction requires it to say when the passages do not
-  support an answer and prohibits invented citations.
-- A successful result contains an answer, retrieval/model versions, and one or
-  more citations. Each citation has document title, immutable version or
-  checksum, page/section or chunk locator, quoted supporting excerpt, and an
-  authorized download/view link.
-- Search results, snippets, generated answers, queue messages, and caches use
-  the same ACL and retention rules as the source document. Caches are keyed by
-  user access scope and are invalidated on permission or version change.
-- Log document and version identifiers, job state, model versions, latency, and
-  failures. Do not log complete sensitive documents or prompts by default.
+![Document chat pilot architecture](../img/rag-architecture.png)
 
-## Self-hosted model and hardware plan
+[Editable source for this diagram](../plantuml/rag-architecture.plantuml)
 
-The supplied host is a fourth-generation Intel Core i7 with a GeForce GTX 680.
-Its RAM, SSD capacity, and the card's exact VRAM must be inventoried before a
-pilot. NVIDIA lists the GTX 680 as legacy CUDA compute capability 3.0
-([NVIDIA legacy GPU table](https://developer.nvidia.com/cuda/gpus/legacy)).
-The proposal therefore treats the GPU as an optional experiment, not a
-dependency: current model runtimes and CUDA packages may not reliably support
-it. The baseline is CPU-first and asynchronous.
+1. A user uploads a file in the existing management page, or sends a question
+   in the existing chat.
+2. `system-api` checks who the user is and what files they can access. It saves
+   the task and returns quickly.
+3. A queue is a waiting list for slow tasks. The AI computer takes the next
+   task when it is ready.
+4. For a file, the AI computer reads it and makes a **search index**: a fast
+   list of small pieces of text linked to the original file and page.
+5. For a question, it searches only the allowed pieces, then a local model
+   writes an answer from those pieces.
+6. The chat shows the answer plus links to the exact source documents. File
+   and question progress are sent back to the page; after reconnecting, the
+   page can also ask the API for the saved status.
 
-| Component | Pilot choice | Constraint on the supplied host |
+The AI computer is private. It is not a public website and must only accept
+work from `system-api` over an authenticated encrypted connection.
+
+## What users see
+
+![Asynchronous upload and chat flow](../img/rag-async-workflow.png)
+
+[Editable source for this diagram](../plantuml/rag-async-workflow.plantuml)
+
+| Action | What the user sees | Final result |
 | --- | --- | --- |
-| Text extraction | CPU workers for PDF/Office/text extraction; OCR only for scanned pages | Keep OCR in the queue and cap concurrency to one until measured. |
-| Embeddings | A small multilingual embedding model served locally (for example, the E5-small class) | Appropriate for CPU batching; benchmark Spanish and environmental terminology before selection. |
-| Vector search | A self-hosted vector store on the AI host, with metadata filters and persistent backups | Size disk for original files, extracted text, vectors, and a backup; do not depend on GPU VRAM. |
-| Answer generation | A locally served 1.5B–3B instruction model in a quantized CPU format, restricted to one active generation job | It may be slow on a fourth-generation CPU. Queueing makes this acceptable for a pilot but does not create interactive-chat latency. |
-| GTX 680 | Optional legacy acceleration trial only | Do not spend implementation time making the design depend on it. A modern supported GPU is a later scaling decision, justified by measured queue wait and answer quality. |
+| Upload or replace a file | `Waiting`, `Reading file`, `Preparing search`, then `Ready` | The file version is ready to search, or the page explains why it failed. |
+| Remove a file | `Removing from search` | It can no longer appear in answers before its derived search data is deleted. |
+| Ask in chat | The new chat message shows `Preparing answer` | An answer with source cards, or `I could not find support for this in the documents you can access.` |
 
-Before loading the corpus, verify at least 16 GB usable RAM, healthy SSD space
-for the planned corpus plus backups, sustained thermal operation, and a power
-measurement. If those checks fail, run extraction/embedding on a newer
-CPU/GPU host rather than weakening the provenance and access controls.
+WebSockets send live progress to an open page. The saved task status remains
+the reliable record, so polling still works after a refresh or connection loss.
 
-## Cost baseline and in-house value
+## Files, permissions, and sources
 
-The cost comparison is intentionally transparent rather than a claim of
-equal performance. A modern cloud GPU is a useful spend baseline; the GTX 680
-is not equivalent to it. Reprice in the selected AWS region and with the
-current electricity tariff before approval.
-
-| Scenario | Illustrative monthly cost (USD) | What it shows |
-| --- | ---: | --- |
-| Existing AI host, incremental power only | `watts ÷ 1,000 × 730 × local tariff` | At a measured/assumed 100 W and $0.15/kWh, this is **$10.95/month**. Hardware purchase, backup media, and support time are excluded. |
-| Always-on cloud GPU reference | `0.526 × 730 = $383.98/month` | A g4dn.xlarge reference in US East has 4 vCPU, 16 GiB memory, and one GPU; AWS documents the instance family and its regional pricing basis ([AWS G4](https://aws.amazon.com/ec2/instance-types/g4/)). The $0.526/hour reference is illustrative and must be repriced ([AWS example](https://aws.amazon.com/blogs/machine-learning/bert-inference-on-g4-instances-using-apache-mxnet-and-gluonnlp-1-million-requests-for-20-cents/)). Storage, egress, backups, and operations are extra. |
-| Private S3 source storage | `GB stored × $0.023` | 100 GB is about **$2.30/month** and 1 TB about **$23/month** before requests, transfer, versioning, or retrieval. AWS notes that S3 Standard storage pricing excludes those additional charges ([AWS cost guide](https://docs.aws.amazon.com/es_es/cost-management/latest/userguide/cost-management-guide.pdf)). |
-
-With sunk hardware and the 100 W/$0.15 assumption, avoiding an always-on
-cloud-GPU reference avoids roughly **$373/month** of compute spend before
-storage, backup, electricity variation, and labor. The financial value is
-strongest for a steady internal workload: documents remain local, incremental
-cost is mostly power and maintenance, and slow jobs can run off the request
-path. It is not a reason to run unsupported GPU software or omit backups.
-
-## Pilot, measurement, and decision gates
-
-Run a bounded internal pilot before any broad import: a representative sample
-of permitted environmental documents, at least 50 questions with known
-supporting passages, and negative/access-denied cases. Record results by
-document type and language.
-
-| Gate | Evidence required to proceed |
+| Item | Pilot choice |
 | --- | --- |
-| Grounding | Reviewers find every accepted answer's citation, version, and cited passage; unsupported questions return `not-supported` rather than a fabricated answer. |
-| Security | A user without access cannot discover a document through search, citation, job status, cache, or WebSocket event. Revoke/update tests remove retrieval access immediately. |
-| Operations | Queue depth, wait time, job duration by stage, retry/failure rate, index size, disk free space, host temperature/power, and backup/restore are measured. |
-| Quality | Establish target recall@k and citation correctness from the 50-question set before comparing models or chunk sizes. Human reviewers rate answer usefulness separately from retrieval correctness. |
-| Cost | Compare measured host power and operator time with a current cloud estimate for the same monthly document and query volume. |
+| Original files | Store them in one private place: either a private S3 bucket or encrypted disk on the AI computer. Do not make either location public. |
+| File information | PostgreSQL stores the file name, owner, allowed users/roles, version, checksum, upload date, and task status. |
+| Search index | Keep it on the AI computer. It is derived from the files and can be rebuilt; it is not the only copy of a file. |
+| Source shown in chat | Each source card includes title, file version, page or section when available, a short supporting quote, and an authorized open/download link. |
+| File update or removal | A new version creates a new background task. Removing access hides the file from search immediately, then deletes its derived text and search entries. |
 
-Scale only after these gates pass. If response time becomes a problem, first
-add workers or a supported GPU to the self-hosted host; preserve the queue,
-job, authorization, citation, and storage contracts so that upgrade does not
-change user-visible trust guarantees.
+`system-api` must check permission before creating a task and again when the
+AI computer searches. Search results, chat answers, source quotes, status
+events, and cached results must follow the same file permissions.
+
+## Pilot model and machine
+
+| Part | Pilot approach |
+| --- | --- |
+| Read files | Use the CPU to read PDF, Office, and text files. Run OCR for scanned pages as a background task. |
+| Find text | Run a small multilingual model locally to create the search index. Test it with Spanish and the environmental terms used by Ríos Vivos. |
+| Write answers | Run a small local model in a compressed format, one answer at a time. It may be slow; the queue and chat status handle that honestly. |
+| GTX 680 | Try it only if the installed software supports it. NVIDIA classifies it as legacy CUDA compute capability 3.0 ([NVIDIA table](https://developer.nvidia.com/cuda/gpus/legacy)), so the pilot cannot rely on it. |
+
+Before importing many files, confirm at least 16 GB usable RAM, enough healthy
+SSD space for files, the search index, and backups, and safe temperatures
+during a long task. Record real power use. If the pilot shows that answers or
+file processing wait too long, use the same design with a newer GPU or CPU;
+the chat and stored files do not need to change.
+
+## Cost picture
+
+The existing computer has no new purchase cost for the pilot. Its monthly power
+cost is:
+
+`watts ÷ 1,000 × 730 × local electricity price`
+
+For example, 100 W at $0.15/kWh costs **$10.95 per month**. Measure the actual
+number before using it for a budget.
+
+For comparison only, an always-on AWS `g4dn.xlarge` cloud GPU reference at
+$0.526/hour is about **$383.98/month** (`0.526 × 730`). It is faster hardware,
+not an equal GTX 680 comparison; storage, backup, transfer, and operator time
+are extra. Recheck the selected region before approval ([AWS G4
+instances](https://aws.amazon.com/ec2/instance-types/g4/)).
+
+Private S3 storage is also separate: at $0.023/GB-month, 100 GB is about
+**$2.30/month** and 1 TB about **$23/month**, before requests, transfers, or
+file versions ([AWS cost guide](https://docs.aws.amazon.com/es_es/cost-management/latest/userguide/cost-management-guide.pdf)).
+
+The value of the in-house pilot is simple: it tests whether the existing
+machine can answer the real internal workload before Ríos Vivos pays a monthly
+cloud GPU bill or buys new hardware.
+
+## Pilot checks
+
+Start with a representative set of allowed environmental documents and 50
+questions where reviewers know the supporting text.
+
+- Every accepted answer must lead reviewers to the correct file, version, and
+  supporting page or text part.
+- A user without permission must not see a file name, quote, answer, task
+  status, or source link for that file.
+- Record upload time, processing time, queue wait, answer time, failed tasks,
+  disk space, temperature, power, and backup/restore results.
+- Reviewers rate whether the answer is useful and whether its sources really
+  support it. An answer without support must say so.
+
+Use those results to decide whether to keep the CPU-first host, add supported
+hardware, or use cloud compute. Do not move to a broad import until the source
+links, permission checks, backup, and measured cost are accepted.

@@ -1,58 +1,37 @@
 @startuml
-title Rios Vivos — asynchronous ingestion and answer workflow
+title Rios Vivos — what happens after upload and chat questions
 autonumber
 
 actor User
-participant "Web/Admin client" as Client
+participant "Existing upload page\n/dashboard/management/rag" as Upload
+participant "Existing chat page\n/dashboard/rag" as Chat
 participant "system-api" as API
-database "PostgreSQL\nACL + job state" as DB
-queue "Durable queue" as Queue
-participant "AI-host worker" as Worker
-database "Source storage\nS3 or encrypted disk" as Store
-database "Vector index" as Index
-participant "Local model" as Model
-participant "WebSocket" as WS
+queue "Task queue" as Queue
+participant "AI computer" as AI
+database "Saved task status" as Status
 
-== Ingest a document version ==
-User -> Client : choose file
-Client -> API : upload / request ingestion
-API -> DB : validate ownership, visibility, version
-API -> Store : save immutable source version
-API -> DB : create job(queued)
-API -> Queue : enqueue(document-id:version:checksum)
-API --> Client : 202 + jobId
-API -> WS : queued
-WS --> Client : progress event
-Worker -> Queue : reserve job
-Worker -> DB : state: extracting / chunking / embedding
-Worker -> Store : read source
-Worker -> Index : upsert chunks with document/version IDs
-Worker -> DB : indexed + audit
-Worker -> WS : completed
-WS --> Client : completed + version
+== Upload or replace a document ==
+User -> Upload : choose file
+Upload -> API : upload file
+API -> Status : save Waiting
+API -> Queue : add file task
+API --> Upload : show Waiting
+Queue -> AI : read and prepare file for search
+AI -> Status : Ready or Failed
+API --> Upload : show live status\n(or page asks for saved status)
 
-== Ask a question ==
-User -> Client : ask question
-Client -> API : create RAG query
-API -> DB : authenticate; derive allowed document versions
-alt no authorized sources
-  API -> DB : result(not-supported or denied)
-  API --> Client : terminal result
-else allowed sources
-  API -> DB : create query job(queued)
-  API -> Queue : enqueue(query job + ACL scope)
-  API --> Client : 202 + jobId
-  Worker -> Queue : reserve job
-  Worker -> Index : retrieve only allowed versions
-  Worker -> Model : question + retrieved passages
-  Model --> Worker : answer + cited chunks or not-supported
-  Worker -> DB : result, citations, model versions, audit
-  Worker -> WS : completed
-  WS --> Client : answer + citations
-end
+== Ask in chat ==
+User -> Chat : send question
+Chat -> API : ask question
+API -> Status : save Preparing answer
+API -> Queue : add question task
+API --> Chat : show Preparing answer
+Queue -> AI : find allowed text\nand write answer
+AI -> Status : save answer and sources
+API --> Chat : show answer\nwith document links and quotes
 
-note over Client,WS
-Polling the persisted job record is the fallback after
-disconnects; WebSocket events alone are never authoritative.
+note over Upload,Chat
+The page never waits for the AI computer.
+It shows progress while the task runs in the background.
 end note
 @enduml

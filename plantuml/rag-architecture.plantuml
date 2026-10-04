@@ -1,55 +1,51 @@
 @startuml
-title Rios Vivos — proposed self-hosted RAG architecture
+title Rios Vivos — document chat pilot
 left to right direction
 skinparam shadowing false
 skinparam componentStyle rectangle
 
-actor "Authorized internal\nuser" as user
-rectangle "Rios Vivos application boundary" {
-  [Web / Admin client] as client
-  [system-api\nAuth, ACL, jobs, audit] as api
-  database "PostgreSQL\nmetadata, ACL, document versions,\njob state, audit" as pg
-  queue "Redis / durable queue\ningestion + query jobs" as queue
-  [Authenticated\nWebSocket gateway] as ws
+actor "Internal user" as user
+
+rectangle "Existing admin pages" {
+  [File upload\n/dashboard/management/rag] as upload
+  [Chat\n/dashboard/rag] as chat
 }
 
-cloud "Private source storage\nS3 OR encrypted AI-host disk\noriginal files + versions" as objectstore
+[system-api\nchecks access and saves task status] as api
+queue "Task queue\nwaiting list for slow work" as queue
+database "Database\nfile information, permissions, task status" as db
+cloud "Private file storage\nS3 or AI-computer disk" as files
 
-node "Private AI host\n4th-gen Intel Core i7\nGTX 680 optional; CPU-first baseline" {
-  [Worker] as worker
-  [Text extraction / OCR] as extract
-  [Local multilingual\nembedding service] as embed
-  database "Self-hosted vector index\nchunk vectors + document/version IDs" as vector
-  [Local quantized\nanswer model] as llm
+node "Private AI computer\n4th-gen Intel Core i7\nGTX 680 used if supported" {
+  [Read files and prepare search] as prepare
+  database "Search index\nsmall text pieces linked to files" as index
+  [Find sources and write answer] as answer
 }
 
-user --> client : upload / question
-client --> api : HTTPS + authenticated session
-api --> pg : authorize; create/read job
-api --> queue : enqueue only after authorization
-api --> ws : publish persisted job state
-ws --> client : authorized progress/result event
-client --> api : poll fallback; download citation
+user --> upload : add or replace file
+user --> chat : ask question
+upload --> api : file request
+chat --> api : question
+api --> db : check permission\nsave task status
+api --> files : save private file
+api --> queue : add background task
+api --> chat : show saved progress\nand final answer
 
-worker --> queue : reserve idempotent job
-worker --> pg : read ACL scope, metadata; write status/audit
-worker --> objectstore : read authorized source version
-worker --> extract : extract + normalize
-extract --> embed : chunks
-embed --> vector : vectors + provenance metadata
+queue --> prepare : file task
+prepare --> files : read file
+prepare --> index : build or update search index
+queue --> answer : question task
+answer --> index : search allowed text only
+answer --> api : answer + source locations
+api --> db : save result and task status
 
-worker --> vector : retrieve using API ACL allow-list
-worker --> llm : question + authorized passages only
-llm --> worker : grounded answer + cited chunk IDs
-worker --> pg : store result/citations/status
-
-note bottom of api
-The vector index is not an authorization boundary.
-API-derived document/version filters are mandatory.
+note bottom of chat
+Chat shows an answer with source links.
+It shows progress while slow work is running.
 end note
 
-note bottom of vector
-Derived, rebuildable data. Originals and ACLs
-do not live only in the vector index.
+note bottom of index
+The search index can be rebuilt.
+Original files stay in private storage.
 end note
 @enduml
