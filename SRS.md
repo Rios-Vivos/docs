@@ -59,7 +59,10 @@ Esta pagina será diseñada para los que se quieran enterar de quienes son Rios 
 
 ### Roadmap del Proyecto
 
-Pendiente de actualización.
+El roadmap operativo y la trazabilidad con issues se mantiene en el
+[catálogo de features](Features/README.md). El estado de una ficha representa
+el comportamiento verificado o planificado; una issue cerrada no reemplaza la
+verificación contra el repositorio dueño.
 
 ## Descripción General
 
@@ -241,4 +244,7 @@ Aquí se detallarán las posibles amenazas de seguridad y la manera en la que se
 
 ### Requerimientos Funcionales
 
-Se encuentran en [Github Projects](https://github.com/users/RiosVivos/projects/1/views/8) 
+Los requerimientos funcionales y su trazabilidad con issues se encuentran en el
+[catálogo de features](Features/README.md). GitHub Projects gestiona la
+priorización del trabajo, mientras que las fichas documentan alcance, reglas,
+dependencias y criterios de aceptación durables.
