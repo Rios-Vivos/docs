@@ -181,8 +181,6 @@ MQTT broker, `system-api`, PostgreSQL, or Grafana.
 
 ![Proposed monitoring and document-chat architecture](img/system-architecture-rag-pilot.png)
 
-[Editable PlantUML source](plantuml/system-architecture-rag-pilot.plantuml)
-
 #### Diagrama de infraestructura
 ![Infrastructure Diagram](img/infra-diagram.png)
 
