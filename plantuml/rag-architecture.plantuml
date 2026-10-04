@@ -12,11 +12,14 @@ rectangle "Existing admin pages" {
 }
 
 [system-api\nchecks access and saves task status] as api
+cloud "WireGuard VPN\nprivate API-to-AI link" as vpn
 queue "Task queue\nwaiting list for slow work" as queue
 database "Database\nfile information, permissions, task status" as db
+database "PostgreSQL reporting views\nread-only monitoring reports" as reports
 cloud "Private file storage\nS3 or AI-computer disk" as files
 
 node "Private AI computer\n4th-gen Intel Core i7\nGTX 680 used if supported" {
+  [RAG worker\npulls approved jobs] as worker
   [Read files and prepare search] as prepare
   database "Search index\nsmall text pieces linked to files" as index
   [Find sources and write answer] as answer
@@ -30,12 +33,16 @@ api --> db : check permission\nsave task status
 api --> files : save private file
 api --> queue : add background task
 api --> chat : show saved progress\nand final answer
+api --> reports : own reviewed views
+api --> vpn : private task service
+vpn --> worker : claim job; report progress/result
 
-queue --> prepare : file task
+worker --> prepare : file task
 prepare --> files : read file
 prepare --> index : build or update search index
-queue --> answer : question task
+worker --> answer : question task
 answer --> index : search allowed text only
+worker --> reports : read approved reports only
 answer --> api : answer + source locations
 api --> db : save result and task status
 

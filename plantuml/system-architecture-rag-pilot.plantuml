@@ -1,0 +1,62 @@
+@startuml
+title Rios Vivos — proposed monitoring and document-chat pilot
+left to right direction
+skinparam shadowing false
+skinparam componentStyle rectangle
+
+actor "Internal user" as user
+node "Monitoring stations\nESP32 sensors" as stations
+cloud "MQTT broker\nmqtt.riosvivos.org" as mqtt
+
+rectangle "Rios Vivos cloud/API network" {
+  [System Admin\nchat + file management] as admin
+  [system-api\nauth, documents, monitoring, jobs] as api
+  queue "Redis + BullMQ\nbackground task list" as queue
+  database "PostgreSQL\nmonitoring and app data" as pg
+  database "rag_reporting views\nread-only trusted reports" as views
+  database "Private S3\noriginal documents" as s3
+  [Grafana] as grafana
+  [WireGuard gateway] as gateway
+}
+
+node "Private local AI computer\n4th-gen Intel Core i7 + GTX 680 pilot" {
+  [WireGuard peer] as peer
+  [RAG worker\npulls approved tasks] as worker
+  [Docling\nreads documents] as docling
+  database "Qdrant\nlocal document search" as qdrant
+  [llama.cpp\nlocal answer model] as llm
+}
+
+user --> admin : upload files\nask in chat
+stations --> mqtt : WiFi/GSM telemetry
+mqtt --> api : monitoring messages
+api --> pg : store monitoring + app data
+pg --> views : reviewed report views
+api --> grafana : monitoring dashboards
+api --> admin : answers, sources,\njob progress
+
+admin --> api : authenticated requests
+api --> s3 : store document versions
+api --> queue : add upload/question task
+api --> gateway : private task API
+gateway == peer : WireGuard VPN
+peer --> worker : private HTTPS
+worker --> s3 : short-lived file read URL
+worker --> docling : document job
+docling --> qdrant : text + file/page IDs
+worker --> qdrant : find allowed text
+worker --> views : SELECT only on approved reports
+worker --> llm : documents/reports only
+llm --> worker : answer + source IDs
+worker --> api : result + progress
+
+note bottom of views
+The AI host has a dedicated read-only account.
+It cannot read base tables or write to PostgreSQL.
+end note
+
+note bottom of worker
+The worker never connects directly to Redis.
+It claims approved jobs from system-api over the VPN.
+end note
+@enduml
