@@ -30,5 +30,6 @@ publication, status/error-log receipt, offline handling, and audit visibility.
 ## Boundary
 
 This record covers currently supported remote operation. Factory provisioning,
-automatic registration, and expanded OTA workflows remain planned in
-[Station lifecycle and OTA](Review-Station_Lifecycle_and_OTA.md).
+automatic registration, and managed release workflows remain proposed in
+[Station provisioning](Review-Station_Provisioning_and_Registration.md) and
+[Managed OTA releases](Review-Managed_OTA_Releases.md).
