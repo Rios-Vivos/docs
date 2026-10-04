@@ -59,7 +59,14 @@ Esta pagina será diseñada para los que se quieran enterar de quienes son Rios 
 
 ### Roadmap del Proyecto
 
-Pendiente de actualización.
+El roadmap operativo y la trazabilidad con issues se mantiene en el
+[catálogo de features](Features/README.md). El estado de una ficha representa
+el comportamiento verificado o planificado; una issue cerrada no reemplaza la
+verificación contra el repositorio dueño.
+
+La sección “Etapas” conserva el plan histórico. Para conocer las capacidades
+implementadas actualmente se debe usar el mapa de features implementadas en el
+catálogo, no inferir estado a partir de esa tabla.
 
 ## Descripción General
 
@@ -71,7 +78,6 @@ Enlace al glosario [aqui](Glossary.md)
 
 | Feature | Descripción |
 |---------|-------------|
-| RAG | Búsqueda de información pertinente en grandes cantidades de documentos utilizando IA |
 | Optimización de Sistema | Corrección y limpieza del sistema, mejoras en los procesos de desarrollo continuo y migracion a un servicio serverless para economizar la infraestructura. |
 | Sistema de Comunicación | Se agrega la opcion de enviar articulos de opinion que puedan ser posteriormente agregados en un blog. |
 | Repositorio de Información | Interfaz para la subida, descarga, busqueda y filtrado de documentos. |
@@ -241,4 +247,7 @@ Aquí se detallarán las posibles amenazas de seguridad y la manera en la que se
 
 ### Requerimientos Funcionales
 
-Se encuentran en [Github Projects](https://github.com/users/RiosVivos/projects/1/views/8) 
+Los requerimientos funcionales y su trazabilidad con issues se encuentran en el
+[catálogo de features](Features/README.md). GitHub Projects gestiona la
+priorización del trabajo, mientras que las fichas documentan alcance, reglas,
+dependencias y criterios de aceptación durables.
