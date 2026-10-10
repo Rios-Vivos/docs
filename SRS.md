@@ -171,6 +171,12 @@ Diagrama de la infraestructura en AWS. Creada a través de Terraform.
 
 Para tener un objetivo claro y reproducir el conocimiento de los productos, se comparten los siguientes diseños de la arquitectura del sitio.
 
+#### Propuesta: hub de investigación documental
+
+La definición vigente está en la [épica del hub de investigación documental](Features/Review_Documental_Investigation_Hub.md). Conserva el monitoreo separado de la investigación documental: las estaciones continúan enviando telemetría por MQTT a `system-api`, mientras que los nodos locales procesan solamente documentos y reportes aprobados mediante una conexión privada. No sustituyen MQTT, `system-api`, PostgreSQL ni Grafana.
+
+![Arquitectura propuesta: monitoreo e investigación documental](img/system-architecture-rag-pilot.png)
+
 #### Diagrama de infraestructura
 ![Infrastructure Diagram](img/infra-diagram.png)
 
