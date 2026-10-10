@@ -7,4 +7,5 @@
   trazabilidad de features.
 - `plantuml/`: diagramas de base de datos y seguridad en formato PlantUML.
 - `img/`: recursos gráficos utilizados en los documentos.
-- `Files/`: materiales de referencia (PDF/DOCX) asociados.
+- [`Features/Review_Documental_Investigation_Hub.md`](Features/Review_Documental_Investigation_Hub.md): épica vigente del hub de investigación documental.
+- [`Files/`](Files/README.md): mockups, seguimiento y material de apoyo de esa épica.
