@@ -147,13 +147,18 @@ Aplicar en API **y en cola**, no únicamente en la interfaz:
 8. Caché por hash de `pregunta_normalizada + documentos/versiones + alcance + política + modelo/prompt_version`, con TTL e invalidación al cambiar un documento.
 9. Jobs grandes con **estimación previa** en pantalla; inicio exige confirmación y permiso.
 
-### 3.6 Nodo local con PC RTX 4070 SUPER
+### 3.6 Dos nodos locales: legado y RTX 4070 SUPER
 
-Equipo informado: RTX 4070 SUPER (normalmente 12 GB VRAM), Intel Core Ultra 7 256K (identificación por confirmar), 63 GB DDR5, SSD Crucial T700 1 TB. Suficiente para probar extracción/OCR, embeddings locales y modelos pequeños/medianos cuantizados. Para 14B/contextos largos probablemente sea necesario optimizar cuantización, buffers u offload a RAM; medir en lugar de prometer rendimiento.
+Se mantienen los dos equipos locales como nodos independientes y registrados:
 
-**Topología recomendada:** Sails.js/EC2 mantiene cola central y balance de políticas; la PC abre una conexión **saliente autenticada** sobre WireGuard/Tailscale o mTLS con el servidor, registra un `worker_id`, capacidades, heartbeat, disponibilidad y concurrencia. Reclama **trabajos autorizados** y recibe objetos cifrados o URLs S3 firmadas de lectura mínima. Ollama atiende solo en `127.0.0.1`/interfaz privada. No hay port-forward público al hogar.
+| Nodo | Equipo | Uso inicial | Restricciones |
+|---|---|---|---|
+| `legacy` | Intel Core i7 de cuarta generación con GTX 680 | Parseo CPU, OCR, extracción e índices o modelos pequeños que superen una prueba de capacidad. | La GTX 680 tiene capacidad CUDA 3.0 y no es requisito del servicio; no se habilita para un trabajo hasta comprobar soporte, memoria, temperatura y tiempo de respuesta. |
+| `rtx-4070` | RTX 4070 SUPER, Intel Core Ultra 7 256K por confirmar, 63 GB DDR5 y SSD Crucial T700 de 1 TB | Extracción/OCR, embeddings locales y modelos pequeños o medianos cuantizados. | Para modelos de 14B o contextos largos se mide cuantización, buffers y posible offload antes de prometer rendimiento. |
 
-**Política de ruteo:** `consulta simple → SQL/FTS`; `análisis de lotes elegibles + nodo activo → cola local`; `pregunta interpretativa → proveedor cloud barato permitido`; `local-only + nodo offline → trabajo en espera o error explícito`, **nunca enviarlo silenciosamente a nube**. Definir per-investigation si está permitida la computación en nodo personal. Al completar una tarea, borrar temporales según retención y registrar versión del modelo.
+**Topología recomendada:** Sails.js/EC2 mantiene la cola central y aplica las políticas. Cada nodo abre una conexión **saliente autenticada** sobre WireGuard/Tailscale o mTLS, registra su `worker_id`, capacidades, heartbeat, disponibilidad y concurrencia, y reclama solo trabajos autorizados. Recibe objetos cifrados o URLs S3 firmadas de lectura mínima. Ollama atiende solo en `127.0.0.1` o en una interfaz privada. No hay port-forward público al hogar.
+
+**Política de ruteo:** `consulta simple → SQL/FTS`; `análisis de lote elegible → nodo local activo con la capacidad requerida`; `pregunta interpretativa → proveedor cloud permitido por la política`; `LOCAL_ONLY + ningún nodo compatible disponible → trabajo en espera o error explícito`. Nunca se envía trabajo silenciosamente a nube. La investigación define si se permite cómputo en cada nodo personal. Al completar una tarea se borran temporales según retención y se registra nodo, versión de modelo y pipeline.
 
 ## 4. Modelo de datos mínimo
 
@@ -291,7 +296,7 @@ Cada historia es un PR/release pequeño, cerrado cuando pasan CI, pruebas y docu
 |---|---|
 | Admin UI | Verificar stack real y guardas existentes; no asumir que es Next.js únicamente por el resto del proyecto |
 | Conexión al nodo | Determinar si el equipo personal podrá procesar material confidencial; cifrado y política de retención |
-| RTX 4070 SUPER | Benchmarks reales por modelo cuantizado, throughput, VRAM, OCR y carga simultánea; no asegurar 14B fluido |
+| Nodos locales | Medir por separado el Core i7 de cuarta generación con GTX 680 y la RTX 4070 SUPER: soporte de runtime, throughput, VRAM, OCR, temperatura, consumo y carga simultánea; no asegurar 14B fluido |
 | Precios/API | Precios varían por modelo y proveedor; no fijar precios ni número de tokens como verdad permanente |
 | AWS RDS | Compatibilidad real con `pgvector`, extensiones y tamaño del corpus |
 | Evaluación | Preparar dataset etiquetado por científicos para medir precisión y falsos negativos |

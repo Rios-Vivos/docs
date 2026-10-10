@@ -171,15 +171,11 @@ Diagrama de la infraestructura en AWS. Creada a través de Terraform.
 
 Para tener un objetivo claro y reproducir el conocimiento de los productos, se comparten los siguientes diseños de la arquitectura del sitio.
 
-#### Proposed architecture: monitoring and document-chat pilot
+#### Propuesta: hub de investigación documental
 
-This proposal keeps the current monitoring path separate from the planned
-document-chat path. Stations continue to send telemetry by MQTT to
-`system-api`. The local AI computer is only for document and approved-report
-jobs; it joins the API network through a private VPN. It does not replace the
-MQTT broker, `system-api`, PostgreSQL, or Grafana.
+La definición vigente está en la [épica del hub de investigación documental](Features/Review_Documental_Investigation_Hub.md). Conserva el monitoreo separado de la investigación documental: las estaciones continúan enviando telemetría por MQTT a `system-api`, mientras que los nodos locales procesan solamente documentos y reportes aprobados mediante una conexión privada. No sustituyen MQTT, `system-api`, PostgreSQL ni Grafana.
 
-![Proposed monitoring and document-chat architecture](img/system-architecture-rag-pilot.png)
+![Arquitectura propuesta: monitoreo e investigación documental](img/system-architecture-rag-pilot.png)
 
 #### Diagrama de infraestructura
 ![Infrastructure Diagram](img/infra-diagram.png)

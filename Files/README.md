@@ -5,7 +5,7 @@
 ## Archivos
 
 - [`../Features/Review_Documental_Investigation_Hub.md`](../Features/Review_Documental_Investigation_Hub.md): **fuente de verdad de la épica**. Contiene 23 historias, arquitectura, permisos, esquema, endpoints, tests y deployment.
-- `EPICA_Investigacion_Documental_Rios_Vivos.md`: copia de referencia recibida; mantener sincronizada con la ficha de `Features/`.
+- `EPICA_Investigacion_Documental_Rios_Vivos.md`: nota de consolidación del material recibido; la ficha de `Features/` es la única fuente de verdad.
 - `mockups.html`: **prototipo navegable local**. Abrir en un navegador. Cambiar de sección usando el menú izquierdo.
 - Pantallas de referencia: [`mockup_budgets.png`](../img/mockup_budgets.png), [`mockup_chat.png`](../img/mockup_chat.png), [`mockup_detail.png`](../img/mockup_detail.png), [`mockup_findings.png`](../img/mockup_findings.png), [`mockup_investigations.png`](../img/mockup_investigations.png), [`mockup_library.png`](../img/mockup_library.png), [`mockup_models.png`](../img/mockup_models.png) y [`mockup_workers.png`](../img/mockup_workers.png). El [resumen visual](../img/RESUMEN_mockups.png) reúne las pantallas.
 - `IMPLEMENTATION_STATUS.md`: checklist para registrar avance y retomar sesiones de Codex.

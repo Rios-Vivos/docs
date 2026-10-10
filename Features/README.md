@@ -36,7 +36,7 @@ repositories.
 | Feature | Primary scope | Record |
 | --- | --- | --- |
 | Automated donations, invoicing, and financial administration | Payment, invoice, reconciliation, and restricted reporting lifecycle | [Donations and finance](Review-Donations_and_Finance.md) |
-| Document repository and internal chat | Authorized documents, monitoring reports, and traceable answers | [Repository and chat pilot](Review-Document_Repository_and_RAG.md) |
+| Documentary research hub | Authorized documents, investigations, evidence, monitoring reports, and traceable answers | [Documentary investigation hub](Review_Documental_Investigation_Hub.md) |
 | Station provisioning and registration | Factory-to-operational setup, stable identity, configuration, and registration | [Station provisioning](Review-Station_Provisioning_and_Registration.md) |
 | Managed OTA releases | Release integrity, staged rollout, device results, and recovery | [Managed OTA](Review-Managed_OTA_Releases.md) |
 | Advanced monitoring analytics | Derived results, calibration, constants, formulas, and governed analytical views | [Advanced analytics](Review-Monitoring_Roadmap.md) |
